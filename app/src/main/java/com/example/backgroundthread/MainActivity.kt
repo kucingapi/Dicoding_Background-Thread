@@ -4,39 +4,57 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
+import com.example.backgroundthread.databinding.ActivityMainBinding
+import com.loopj.android.http.AsyncHttpClient
+import com.loopj.android.http.AsyncHttpResponseHandler
+import cz.msebera.android.httpclient.Header
+import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        private val TAG = MainActivity::class.java.simpleName
+    }
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        val btnStart = findViewById<Button>(R.id.btn_start)
-        val tvStatus = findViewById<TextView>(R.id.tv_status)
-        val executor = Executors.newSingleThreadExecutor()
-        val handler = Handler(Looper.getMainLooper())
-        btnStart.setOnClickListener {
-            executor.execute {
-                try {
-                    //simulate process in background thread
-                    for (i in 0..10) {
-                        Thread.sleep(500)
-                        val percentage = i * 10
-                        handler.post {
-                            //update ui in main thread
-                            if (percentage == 100) {
-                                tvStatus.setText(R.string.task_completed)
-                            } else {
-                                tvStatus.text = String.format(getString(R.string.compressing), percentage)
-                            }
-                        }
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        getRandomQuote()
+    }
+
+    private fun getRandomQuote(){
+        binding.progressBar.visibility = View.VISIBLE
+        val client = ApiConfig.getApiService().getQuote()
+        client.enqueue(object : Callback<QuoteResponse> {
+            override fun onResponse(
+                call: Call<QuoteResponse>,
+                response: Response<QuoteResponse>
+            ) {
+                binding.progressBar.visibility = View.INVISIBLE
+                if (response.isSuccessful) {
+                    val responseBody = response.body()
+                    if (responseBody != null) {
+                        binding.tvQuote.text = responseBody.en
+                        binding.tvAuthor.text = responseBody.author
                     }
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
                 }
             }
-        }
+            override fun onFailure(call: Call<QuoteResponse>, t: Throwable) {
+                binding.progressBar.visibility = View.INVISIBLE
+                Log.e(TAG, "onFailure: ${t.message}")
+            }
+        })
     }
+
 }
