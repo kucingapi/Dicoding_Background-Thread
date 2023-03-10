@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.backgroundthread.databinding.ActivityMainBinding
@@ -27,20 +28,16 @@ class MainActivity : AppCompatActivity() {
         private val TAG = MainActivity::class.java.simpleName
     }
     private lateinit var binding: ActivityMainBinding
-    private lateinit var viewModel: MainViewModel
+    private val viewModel by viewModels<MainViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setUpViewModel()
         subscribe()
         getRandomQuote()
     }
 
-    private fun setUpViewModel(){
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
-    }
 
     private fun getRandomQuote(){
         binding.progressBar.visibility = View.VISIBLE
