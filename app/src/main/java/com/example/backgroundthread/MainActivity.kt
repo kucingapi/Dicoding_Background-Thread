@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.backgroundthread.databinding.ActivityMainBinding
 import com.loopj.android.http.AsyncHttpClient
@@ -33,6 +34,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setUpViewModel()
+        subscribe()
         getRandomQuote()
     }
 
@@ -66,6 +68,13 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "onFailure: ${t.message}")
             }
         })
+    }
+    private fun subscribe(){
+        val elapsedTimeObserver = Observer<Long?> {
+            val newText = this@MainActivity.resources.getString(R.string.seconds, it)
+            binding.timerTextview.text = newText
+        }
+        viewModel.getElapsedTime().observe(this, elapsedTimeObserver)
     }
 
     private fun displayQuote(){
