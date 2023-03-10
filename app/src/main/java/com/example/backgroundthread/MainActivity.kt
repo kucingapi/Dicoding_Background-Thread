@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
 import com.example.backgroundthread.databinding.ActivityMainBinding
 import com.loopj.android.http.AsyncHttpClient
 import com.loopj.android.http.AsyncHttpResponseHandler
@@ -25,12 +26,18 @@ class MainActivity : AppCompatActivity() {
         private val TAG = MainActivity::class.java.simpleName
     }
     private lateinit var binding: ActivityMainBinding
+    private lateinit var viewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setUpViewModel()
         getRandomQuote()
+    }
+
+    private fun setUpViewModel(){
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
     }
 
     private fun getRandomQuote(){
@@ -45,8 +52,12 @@ class MainActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val responseBody = response.body()
                     if (responseBody != null) {
-                        binding.tvQuote.text = responseBody.en
-                        binding.tvAuthor.text = responseBody.author
+                        responseBody.run {
+                           viewModel.storeQuote(en, author)
+                        }
+                        viewModel.quote = responseBody.en
+                        viewModel.author = responseBody.author
+                        displayQuote()
                     }
                 }
             }
@@ -55,6 +66,11 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "onFailure: ${t.message}")
             }
         })
+    }
+
+    private fun displayQuote(){
+        binding.tvQuote.text = viewModel.quote
+        binding.tvAuthor.text = viewModel.author
     }
 
 }
